@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flask Calculator</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+
+  <body>
+    <h1>Simple Calculator</h1>
+    <div id="outerContainer">
+      <div id="middleContainer">
+        <div name="display" id="display" autofocus></div>
+        <div id="buttons">
+          <button onclick="backSpace()" style="background-color: red">↩</button>
+          <button class="operator" onclick="append_values('(')">(</button>
+          <button class="operator" onclick="append_values(')')">)</button>
+          <button class="operator" onclick="append_values('/')">/</button>
+          <button onclick="append_values('7')">7</button>
+          <button onclick="append_values('8')">8</button>
+          <button onclick="append_values('9')">9</button>
+          <button class="operator" onclick="append_values('*')">×</button>
+          <button onclick="append_values('4')">4</button>
+          <button onclick="append_values('5')">5</button>
+          <button onclick="append_values('6')">6</button>
+          <button class="operator" onclick="append_values('+')">+</button>
+          <button onclick="append_values('1')">1</button>
+          <button onclick="append_values('2')">2</button>
+          <button onclick="append_values('3')">3</button>
+          <button class="operator" onclick="append_values('-')">-</button>
+          <button onclick="append_values('0')">0</button>
+          <button onclick="append_values('00')">00</button>
+          <button onclick="append_values('.')">.</button>
+          <button class="submit" onclick="calculate()">=</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      let input_values='';
+      const display = document.getElementById("display");
+      // console.log(input_values.length, input_values);
+      function append_values(value) {
+        if (input_values.length === 0) {
+          input_values = value;
+          console.log("if",input_values);
+          display.textContent = input_values;
+        } else {
+          input_values += value;
+          display.textContent = input_values;
+          console.log("else ",input_values);
+        }
+      }
+
+      function backSpace() {
+        input_values = input_values.substring(0, input_values.length - 1);
+        if (input_values.length === 0) {
+          input_values = "";
+        }
+        display.textContent = input_values;
+        console.log(input_values);
+      }
+
+      function clearDisplay() {
+        display.textContent = "0";
+        input_values = "0";
+      }
+
+      async function calculate() {
+        try {
+          let result;
+          console.log(input_values);
+          const response = await fetch("http://127.0.0.1:5000/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ data: input_values }),
+          });
+          result = await response.json();
+          console.log("Response from Backend", result);
+          input_values = result.data;
+          display.textContent = input_values;
+        } catch (error) {
+          // display.textContent = "Error";
+          input_values = "0";
+          alert("Some issue at Client Side. Please try after Reloading.");
+        }
+      }
+
+      // Listen for keyboard input
+      document.addEventListener("keydown", function (event) {
+        const key = event.key;
+        console.log("Key pressed:", key, typeof(key));
+
+        if (!isNaN(key) || key === ".") {
+          // If key is a number (0-9) or a decimal point
+          append_values(key);
+        } else if (key === "+" || key === "-" || key === "*" || key === "/") {
+          // If key is an operator
+          append_values(key);
+        } else if (key === "Enter") {
+          // If Enter is pressed, calculate result
+          calculate();
+        } else if (key === "Backspace") {
+          // If Backspace is pressed, delete last character
+          backSpace();
+        } else if (key === "(" || key === ")") {
+          // If parentheses are pressed
+          append_values(key);
+        }
+      });
+    </script>
+  </body>
+</html>
